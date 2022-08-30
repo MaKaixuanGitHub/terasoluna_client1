@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:sec="http://www.springframework.org/schema/security"
+    xmlns:oauth2="http://www.springframework.org/schema/security/oauth2"
+    xmlns:tx="http://www.springframework.org/schema/tx"
+    xmlns:aop="http://www.springframework.org/schema/aop"
+    xsi:schemaLocation="http://www.springframework.org/schema/security
+           https://www.springframework.org/schema/security/spring-security.xsd
+           http://www.springframework.org/schema/security/oauth2
+           https://www.springframework.org/schema/security/spring-security-oauth2.xsd
+           http://www.springframework.org/schema/beans
+           https://www.springframework.org/schema/beans/spring-beans.xsd
+           http://www.springframework.org/schema/tx 
+           http://www.springframework.org/schema/tx/spring-tx-3.2.xsd
+           http://www.springframework.org/schema/aop
+           http://www.springframework.org/schema/aop/spring-aop-4.3.xsd">
+
+    <oauth2:authorization-server
+        client-details-service-ref="clientDetailsService"
+        user-approval-handler-ref="userApprovalHandler"
+        token-services-ref="tokenServices"
+        token-endpoint-url="/api/token"
+        authorization-endpoint-url="/api/authorize"
+        check-token-endpoint-url="/api/check_token"
+        check-token-enabled="true">
+        <oauth2:authorization-code />
+        <oauth2:implicit />
+        <oauth2:refresh-token />
+        <oauth2:client-credentials />
+        <oauth2:password />
+    </oauth2:authorization-server>
+    
+    <bean id="checkTokenEndpoint"
+        class="org.springframework.security.oauth2.provider.endpoint.CheckTokenEndpoint">  <!-- (2) -->
+        <constructor-arg ref="tokenServices" />
+        <property name="accessTokenConverter" ref="accessTokenConverter" />
+    </bean>
+    
+    <bean id="accessTokenConverter"
+        class="com.example.oauth2.auth.converter.CustomAccessTokenConverter">  <!-- (3) -->
+        <property name="userTokenConverter">
+            <bean class="com.example.oauth2.auth.converter.CustomUserAuthenticationConverter" />
+        </property>
+    </bean>
+    
+    <bean id="tokenServices"
+    class="org.springframework.security.oauth2.provider.token.RemoteTokenServices">
+    <property name="checkTokenEndpointUrl" value="${auth.serverUrl}/oauth/check_token" />
+    <property name="accessTokenConverter" ref="accessTokenConverter" />
+</bean>
+
+<bean id="accessTokenConverter"
+    class="org.springframework.security.oauth2.provider.token.DefaultAccessTokenConverter">
+    <property name="userTokenConverter">
+        <bean class="com.example.oauth2.resource.converter.CustomUserAuthenticationConverter"/>  <!-- (1) -->
+    </property>
+</bean>
+
+</beans>
